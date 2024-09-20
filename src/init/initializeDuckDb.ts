@@ -15,12 +15,13 @@ let DB: Promise<AsyncDuckDB> | undefined;
 export default async function initializeDuckDb(options?: {
   debug?: boolean;
   config?: DuckDBConfig;
+  custom_bundles?: duckdb.DuckDBBundles;
 }): Promise<AsyncDuckDB> {
-  const { debug = false, config } = options || {};
+  const { debug = false, config, custom_bundles } = options || {};
   DEBUG = debug;
 
   if (DB === undefined) {
-    DB = _initializeDuckDb(config);
+    DB = _initializeDuckDb(config, custom_bundles);
   }
   return DB;
 }
@@ -28,12 +29,12 @@ export default async function initializeDuckDb(options?: {
 /**
  * Initialize DuckDB with a browser-specific Wasm bundle.
  */
-const _initializeDuckDb = async (config?: DuckDBConfig): Promise<AsyncDuckDB> => {
+const _initializeDuckDb = async (config?: DuckDBConfig, custom_bundles?: duckdb.DuckDBBundles): Promise<AsyncDuckDB> => {
   const start = performance.now();
 
   // Select a bundle based on browser checks
-  const JSDELIVR_BUNDLES = duckdb.getJsDelivrBundles();
-  const bundle = await duckdb.selectBundle(JSDELIVR_BUNDLES);
+  const BUNDLES = custom_bundles || duckdb.getJsDelivrBundles();
+  const bundle = await duckdb.selectBundle(BUNDLES);
 
   const worker_url = URL.createObjectURL(
     new Blob([`importScripts("${bundle.mainWorker!}");`], {
